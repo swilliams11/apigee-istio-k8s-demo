@@ -2,6 +2,16 @@
 This documentation describes the Apigee Istio Adapter as of version 1.1.1.
 
 ## TOC
+* [Prerequisites](#prerequisites)
+* [Getting started with Apigee Istio Adapter](#getting-started-with-apigee-istio-adapater)
+* [Resources](#resources)
+* [Istio Ingress IP](#istio-ingress-ip)
+* [Hello Application Notes](#hello-application-notes)
+* [Book Info Application Notes](#book-info-application-notes)
+* [Demo Script](#demo-script)
+* [Firestore](#firestore)
+* [Start Ratings Node.js app locally](#start-ratings-nodejs-app-locally)
+* [Ratings API](#ratings-api)
 
 ## Prerequisites
 1. Apigee Edge SaaS account
