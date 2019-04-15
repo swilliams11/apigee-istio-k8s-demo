@@ -12,14 +12,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-FROM node:4-slim
+FROM node:8.15
 
 COPY package.json /opt/microservices/
 COPY ratings.js /opt/microservices/
 RUN cd /opt/microservices; npm install
 
 ARG service_version
-ENV SERVICE_VERSION ${service_version:-v4}
+ENV SERVICE_VERSION ${service_version}
 
 EXPOSE 9080
 WORKDIR /opt/microservices
