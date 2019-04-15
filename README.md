@@ -10,8 +10,8 @@ This documentation describes the Apigee Istio Adapter as of version 1.1.1.
 * [Book Info Application Notes](#book-info-application-notes)
 * [Demo Script](#demo-script)
 * [Firestore](#firestore)
-* [Start Ratings Node.js app locally](#start-ratings-nodejs-app-locally)
 * [Ratings API](#ratings-api)
+  * [Start Ratings Node.js app locally](#start-ratings-nodejs-app-locally)
 
 ## Prerequisites
 1. Apigee Edge SaaS account
@@ -111,20 +111,86 @@ match: context.reporter.kind == "inbound" && destination.namespace == "default" 
 
 Tested the service from the browser and I can see the book info page.  
 
-###
-
 
 ## Demo Script
-todo
+1. Setup terminal
 
-## firestore
+View the current `kubectl` config.
+```
+kubectl config current-context
+```
+
+Set your GCP project and zone.
+```
+gcloud config set project [PROJECT_ID]
+gcloud config set compute/zone us-central1-a
+```
+
+Set the credentials for your K8S cluster.
+```
+gcloud container clusters get-credentials [CLUSTER_NAME]
+```
+
+2. Create the secret in Kubernetes for the Google Firebase JSON file. The secret is named `firebase` and the key is `firebase.json`.
+```
+cd apigee-istio-k8s-demo
+kubectl create secret generic firebase --from-file=keys/firebase.json
+```
+
+Confirm that the secret was created.
+```
+kubectl get secrets
+kubectl describe secrets/firebase
+kubectl get secret firebase -o yaml
+```
+
+3. Deploy ratings API to Kubernetes so that it is publicly accessible.
+
+Deploy Ratings V4 to K8S.
+```
+cd kubernetes
+kubectl apply -f ratings-v4.yaml
+```
+
+
+```
+kubectl get services
+```
+
+You should see the ratings service listed.
+
+```
+NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+edge-microgateway   NodePort                    <none>        8000:31197/TCP   113d
+helloworld          NodePort    10              <none>        8081:31402/TCP   113d
+kubernetes          ClusterIP   10              <none>        443/TCP          115d
+ratings             ClusterIP   10              <none>        9080/TCP         1m
+```
+
+```
+kubectl get pods
+```
+
+Response
+```
+kubectl get pods
+```
+
+
+4. Protect it with Apigee Istio Adapter.
+
+
+
+## Firestore
 This rating app uses Firestore as the backend database.
 
 * Setup credentials for Firestore in location where Node.js will be executed.
 https://cloud.google.com/docs/authentication/getting-started#auth-cloud-implicit-nodejs
 
 
-## Start Ratings Node.js app locally
+## Ratings API
+
+### Start Ratings Node.js app locally
 
 To start
 ```
@@ -132,8 +198,6 @@ export export GOOGLE_APPLICATION_CREDENTIALS="[PATH_TO_YOUR_FIREBASE_JSON_CREDEN
 cd ~/Github/apigee-istio-k8s-demo/src/ratings
 node ratings.js 9000
 ```
-
-## Ratings API
 
 ### Get all ratings
 ```
@@ -164,3 +228,19 @@ Response
 ```
 curl -X POST http://localhost:9000/ratings -d '{ "reviewId": 3, "rating": 5, "productId": 1 }' -v
 ```
+
+### Build Docker image and push to Google Container Registry
+1. [Build a docker file](https://docs.docker.com/engine/reference/commandline/build/).
+
+```
+cd src/ratings
+docker build . --tag ratings:v4 --build-arg service_version=4
+docker tag ratings:v4 gcr.io/apigee-istio-k8s-sw/ratings:v4
+```
+
+2. Push the local docker image to [GCR](https://cloud.google.com/container-registry/docs/pushing-and-pulling).
+```
+docker push gcr.io/apigee-istio-k8s-sw/ratings:v4
+```
+
+###
