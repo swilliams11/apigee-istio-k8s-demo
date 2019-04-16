@@ -11,7 +11,24 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
+##################################################################################################
+# Ratings service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratings-v5
+  labels:
+    app: ratings-v5
+    version: v4
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: ratings
+    version: v5
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
