@@ -138,7 +138,91 @@ Apply the change
 kubectl apply -f samples/apige/grpc/rule.yaml
 ```
 
-### Demo
+### Demo Ratings-v6 - No backend database
+1. Setup terminal
+
+View the current `kubectl` config.
+```
+kubectl config current-context
+```
+
+Set your GCP project and zone.
+```
+gcloud config set project [PROJECT_ID]
+gcloud config set compute/zone us-central1-a
+```
+
+Set the credentials for your K8S cluster.
+```
+gcloud container clusters get-credentials [CLUSTER_NAME]
+```
+
+2. Push the container to your Google Cloud Container Registry.
+```
+cd apigee-istio-k8s-demo/src/ratings-v6
+docker build . --tag ratings:v6 --build-arg service_version=6
+docker tag ratings:v4 gcr.io/$GOOGLE_CLOUD_PROJECT/ratings:v6
+```
+
+Push the local docker image to [GCR](https://cloud.google.com/container-registry/docs/pushing-and-pulling).
+```
+docker push gcr.io/$GOOGLE_CLOUD_PROJECT/ratings:v6
+```
+
+3. Deploy ratings-v6 API to Kubernetes so that it is publicly accessible.
+
+**Note: make sure to update the ratings-v6.yaml file so that it points to your GCP project.**
+```
+  image: gcr.io/YOUR_GCP_PROJECT_NAME_GOES_HERE/ratings:v6
+```
+
+```
+cd apigee-istio-k8s-demo/kubernetes
+kubectl apply -f ratings-v6.yaml
+```
+
+```
+kubectl get services
+```
+
+You should see the ratings service listed.
+
+```
+NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+edge-microgateway   NodePort                    <none>        8000:31197/TCP   113d
+helloworld          NodePort    10              <none>        8081:31402/TCP   113d
+kubernetes          ClusterIP   10              <none>        443/TCP          115d
+ratings             ClusterIP   10              <none>        9080/TCP         1m
+```
+
+```
+kubectl get pods
+```
+
+
+4. Istio is already installed and the Apigee Adapter is already installed/enabled in my environment. Create the Apigee product, app and developer and obtain the API Key.
+
+[Configure the Apigee adapter](https://docs.apigee.com/api-platform/istio-adapter/install-istio_1_1#configure_the_apigee_adapter)
+[Create the developer, product and app](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
+
+
+You can also bind the service to the product with the following [bind command](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
+```
+apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [environment] -u [username] -p [password]
+```
+
+* Add a path to the `istio-ratings` product to show how you can control the product paths via the Apigee product.
+  * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error.
+
+5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
+
+* Access Token Validation (JWTs)
+  * [Istio Authentication Policy](https://istio.io/docs/tasks/security/authn-policy/#end-user-authentication)
+* Validate claims within JWT
+* Masking analytics data
+
+
+### Demo Ratings Firebase
 1. Setup terminal
 
 View the current `kubectl` config.
@@ -170,14 +254,25 @@ kubectl describe secrets/firebase
 kubectl get secret firebase -o yaml
 ```
 
-3. Deploy ratings API to Kubernetes so that it is publicly accessible.
+3. Push the container to your Google Cloud Container Registry.
+```
+cd apigee-istio-k8s-demo/src/ratings
+docker build . --tag ratings:v4 --build-arg service_version=4
+docker tag ratings:v4 gcr.io/$GOOGLE_CLOUD_PROJECT/ratings:v4
+```
+
+Push the local docker image to [GCR](https://cloud.google.com/container-registry/docs/pushing-and-pulling).
+```
+docker push gcr.io/$GOOGLE_CLOUD_PROJECT_NAME_GOES_HERE/ratings:v4
+```
+
+4. Deploy ratings API to Kubernetes so that it is publicly accessible.
 
 Deploy Ratings V4 to K8S.
 ```
 cd kubernetes
 kubectl apply -f ratings-v4.yaml
 ```
-
 
 ```
 kubectl get services
@@ -197,13 +292,7 @@ ratings             ClusterIP   10              <none>        9080/TCP         1
 kubectl get pods
 ```
 
-Response
-```
-kubectl get pods
-```
-
-
-4. Istio is already installed and the Apigee Adapter is already installed/enabled in my environment. Create the Apigee product, app and developer and obtain the API Key.
+5. Istio is already installed and the Apigee Adapter is already installed/enabled in my environment. Create the Apigee product, app and developer and obtain the API Key.
 
 [Configure the Apigee adapter](https://docs.apigee.com/api-platform/istio-adapter/install-istio_1_1#configure_the_apigee_adapter)
 [Create the developer, product and app](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
@@ -217,7 +306,7 @@ apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [e
 * Add a path to the `istio-ratings` product to show how you can control the product paths via the Apigee product.
   * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error.
 
-5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
+6. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
 
 * Access Token Validation (JWTs)
   * [Istio Authentication Policy](https://istio.io/docs/tasks/security/authn-policy/#end-user-authentication)
