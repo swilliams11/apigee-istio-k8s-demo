@@ -1,3 +1,5 @@
+
+
 // Copyright 2017 Istio Authors
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,8 +24,8 @@ var userAddedRatings = [] // used to demonstrate POST functionality
 /**
  * We default to using mongodb, if DB_TYPE is not set to mysql.
  */
-var MongoClient = require('mongodb').MongoClient
-var url = process.env.MONGO_DB_URL
+//var MongoClient = require('mongodb').MongoClient
+//var url = process.env.MONGO_DB_URL
 
 dispatcher.onPost(/^\/ratings\/[0-9]*/, function (req, res) {
   var productIdStr = req.url.split('/').pop()
@@ -57,10 +59,20 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
     res.writeHead(400, {'Content-type': 'application/json'})
     res.end(JSON.stringify({error: 'please provide numeric product ID'}))
   } else {
-    var firstRating = 0
-    var secondRating = 0
+    var firstRating = 5
+    var secondRating = 4
 
-      MongoClient.connect(url, function (err, db) {
+    var result = {
+      id: productId,
+      ratings: {
+        Reviewer1: firstRating,
+        Reviewer2: secondRating
+      }
+    }
+    res.writeHead(200, {'Content-type': 'application/json'})
+    res.end(JSON.stringify(result))
+
+      /*MongoClient.connect(url, function (err, db) {
         if (err) {
           res.writeHead(500, {'Content-type': 'application/json'})
           res.end(JSON.stringify({error: 'could not connect to ratings database'}))
@@ -86,7 +98,7 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
             db.close()
           })
         }
-      })
+      })*/
     }
 })
 
