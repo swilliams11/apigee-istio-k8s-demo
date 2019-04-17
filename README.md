@@ -12,6 +12,7 @@ This documentation describes the Apigee Istio Adapter as of version 1.1.1.
 * [Firestore](#firestore)
 * [Ratings API](#ratings-api)
   * [Start Ratings Node.js app locally](#start-ratings-nodejs-app-locally)
+* [TODOs](#todos)
 
 ## Prerequisites
 1. Apigee Edge SaaS account
@@ -111,6 +112,28 @@ match: context.reporter.kind == "inbound" && destination.namespace == "default" 
 
 Tested the service from the browser and I can see the book info page.  
 
+## Prep script
+Execute these steps if you have already gone through the demo.  
+You have to undo the actions that you already took.
+
+1. Delete the `auth-spec`, which enables JWT.  This will allow you to send requests to the service with the `x-api-key` header instead of the `Authorization: Bearer` header (JWT).
+```
+kubectl delete policy auth-spec
+```
+
+2. To disable the Apigee Adapter so that requests are not protected via Apigee then execute then update `samples/apigee/grpc/rule.yaml` file with the following line.  This creates a rule to skip the adapater if the service name is `ratings-v6`.  
+
+**Note the samples folder is installed when you install the [Apigee Istio Adapter](https://github.com/apigee/istio-mixer-adapter/releases).**
+
+```
+match: context.reporter.kind == "inbound" && destination.namespace == "default" && destination.service.name != "ratings-v6"
+```
+
+Apply the change
+```
+kubectl apply -f samples/apige/grpc/rule.yaml
+```
+
 
 ## Demo Script
 1. Setup terminal
@@ -206,6 +229,7 @@ https://cloud.google.com/docs/authentication/getting-started#auth-cloud-implicit
 
 
 ## Ratings API
+**Note that originally this app was supposed to be backed by the Firestore DB, but there is an error on start-up, therefore use version 6, which does not have a database associated to it.**
 
 ### Start Ratings Node.js app locally
 
@@ -260,6 +284,12 @@ docker tag ratings:v4 gcr.io/apigee-istio-k8s-sw/ratings:v4
 docker push gcr.io/apigee-istio-k8s-sw/ratings:v4
 ```
 
+### Ratings API v5 (mongo_db)
+Ratings API v5 uses MongoDB, but this also generates an error or start-up and needs to be resolved.
+
+### Ratings API v6 (No database)
+This version of the Ratings app does not have a database attached to it.  I created this new revision to use for the demo until I resolve the MongoDB and Firestore errors in the other versions.  
+
 ## Troubleshooting
 
 SSH into a pod and container.
@@ -291,3 +321,8 @@ spec:
 
 ### Enabled Debugging on Apigee Istio Adapter
 [Debug](https://github.com/apigee/istio-mixer-adapter/wiki/Mixer-logging-and-metrics#policy-mixer)
+
+
+## TODOs
+* Resolve ratings v5 (mongodb) startup error
+* Resolve ratings v4 (Firebase) errors
