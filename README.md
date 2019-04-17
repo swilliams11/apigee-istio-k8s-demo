@@ -112,9 +112,13 @@ match: context.reporter.kind == "inbound" && destination.namespace == "default" 
 
 Tested the service from the browser and I can see the book info page.  
 
-## Prep script
-Execute these steps if you have already gone through the demo.  
-You have to undo the actions that you already took.
+
+## Demo Script
+
+### Prep script
+**Note you can skip to the demo section if this is the first time you walk through this.**
+
+Execute these steps if you have already gone through the demo.
 
 1. Delete the `auth-spec`, which enables JWT.  This will allow you to send requests to the service with the `x-api-key` header instead of the `Authorization: Bearer` header (JWT).
 ```
@@ -134,8 +138,7 @@ Apply the change
 kubectl apply -f samples/apige/grpc/rule.yaml
 ```
 
-
-## Demo Script
+### Demo
 1. Setup terminal
 
 View the current `kubectl` config.
