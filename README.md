@@ -188,7 +188,10 @@ You can also bind the service to the product with the following [bind command](h
 apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [environment] -u [username] -p [password]
 ```
 
-5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed. 
+* Add a path to the `istio-ratings` product to show how you can control the product paths via the Apigee product.
+  * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error. 
+
+5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
 
 * Access Token Validation (JWTs)
 * Validate claims within JWT
