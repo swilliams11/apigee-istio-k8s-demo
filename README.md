@@ -189,11 +189,12 @@ apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [e
 ```
 
 * Add a path to the `istio-ratings` product to show how you can control the product paths via the Apigee product.
-  * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error. 
+  * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error.
 
 5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
 
 * Access Token Validation (JWTs)
+  * [Istio Authentication Policy](https://istio.io/docs/tasks/security/authn-policy/#end-user-authentication)
 * Validate claims within JWT
 * Masking analytics data
 
@@ -271,3 +272,22 @@ Tail the logs
 ```
 kubectl logs ratings-v4-xyz ratings -f
 ```
+
+
+### apigee.handler.istio-system:missing authentication error
+The reason I received this error is because my authentication-policy had what is shown below, which is the name of the [VirtualService](https://istio.io/docs/reference/config/networking/v1alpha3/virtual-service/).
+```
+spec:
+  targets:
+  - name: ratings-api
+```
+instead of the following which is the name of my [Service](https://kubernetes.io/docs/concepts/services-networking/service/)
+```
+spec:
+  targets:
+  - name: ratings-v6
+```
+
+
+### Enabled Debugging on Apigee Istio Adapter
+[Debug](https://github.com/apigee/istio-mixer-adapter/wiki/Mixer-logging-and-metrics#policy-mixer)
