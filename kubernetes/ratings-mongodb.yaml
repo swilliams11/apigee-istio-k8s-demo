@@ -20,7 +20,7 @@ metadata:
   name: ratings-v5
   labels:
     app: ratings-v5
-    version: v4
+    version: v5
 spec:
   ports:
   - port: 9080
