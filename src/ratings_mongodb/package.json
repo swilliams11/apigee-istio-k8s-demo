@@ -3,7 +3,8 @@
     "start": "node ratings.js"
   },
   "dependencies": {
-    "httpdispatcher": "1.0.0"
+    "httpdispatcher": "1.0.0",
+    "mongodb": "^2.2.31"
   },
   "devDependencies": {
     "@google-cloud/nodejs-repo-tools": "^3.0.0",

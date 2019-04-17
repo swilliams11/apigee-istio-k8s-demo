@@ -243,4 +243,15 @@ docker tag ratings:v4 gcr.io/apigee-istio-k8s-sw/ratings:v4
 docker push gcr.io/apigee-istio-k8s-sw/ratings:v4
 ```
 
-###
+## Troubleshooting
+
+SSH into a pod and container.
+```
+kubectl exec -it ratings-v4-xyz -- /bin/bash
+```
+
+
+Tail the logs
+```
+kubectl logs ratings-v4-xyz ratings -f
+```
