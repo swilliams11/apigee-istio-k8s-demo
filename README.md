@@ -177,9 +177,22 @@ kubectl get pods
 ```
 
 
-4. Protect it with Apigee Istio Adapter.
+4. Istio is already installed and the Apigee Adapter is already installed/enabled in my environment. Create the Apigee product, app and developer and obtain the API Key.
+
+[Configure the Apigee adapter](https://docs.apigee.com/api-platform/istio-adapter/install-istio_1_1#configure_the_apigee_adapter)
+[Create the developer, product and app](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
 
 
+You can also bind the service to the product with the following [bind command](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
+```
+apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [environment] -u [username] -p [password]
+```
+
+5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed. 
+
+* Access Token Validation (JWTs)
+* Validate claims within JWT
+* Masking analytics data
 
 ## Firestore
 This rating app uses Firestore as the backend database.
