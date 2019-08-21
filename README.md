@@ -21,7 +21,7 @@ This documentation describes the Apigee Istio Adapter as of version 1.1.1.
 1. Apigee Edge SaaS account
 2. Kubernetes environment
 3. Istio installed/enabled in your Kubernetes environment
-  * [Installing Istio on existing GKE] (https://cloud.google.com/istio/docs/istio-on-gke/installing#adding_istio_on_gke_to_an_existing_cluster)
+  * [Installing Istio on existing GKE](https://cloud.google.com/istio/docs/istio-on-gke/installing#adding_istio_on_gke_to_an_existing_cluster)
 
 
 ## Getting Started with Apigee Istio Adapater
