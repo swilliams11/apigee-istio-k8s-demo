@@ -138,7 +138,7 @@ match: context.reporter.kind == "inbound" && destination.namespace == "default" 
 
 Apply the change
 ```
-kubectl apply -f samples/apige/rule.yaml
+kubectl apply -f samples/apigee/rule.yaml
 ```
 
 ### Demo Ratings-v6 - No backend database
