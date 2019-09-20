@@ -88,7 +88,7 @@ PERMISSION_DENIED:apigee-handler.handler.istio-system:missing authentication
 
 2. Updated the `Rule` as shown below.
 
-The rule is located in the `samples/apigee/grpc` folder in a file named `rule.yaml`.  This folder is in the zip file that you download from the [Apigee Istio Adapter Releases](https://github.com/apigee/istio-mixer-adapter/releases).
+The rule is located in the `samples/apigee` folder in a file named `rule.yaml`.  This folder is in the zip file that you download from the [Apigee Istio Adapter Releases](https://github.com/apigee/istio-mixer-adapter/releases).
 
 ```
 match: context.reporter.kind == "inbound" && destination.namespace == "default"
@@ -110,7 +110,7 @@ match: context.reporter.kind == "inbound" && destination.namespace == "default" 
 
 3. Reapply the rule
 ```
- kubectl apply -f samples/apigee/grpc/rule.yaml
+ kubectl apply -f samples/apigee/rule.yaml
 ```
 
 Tested the service from the browser and I can see the book info page.  
@@ -128,7 +128,7 @@ Execute these steps if you have already gone through the demo.
 kubectl delete policy auth-spec
 ```
 
-2. To disable the Apigee Adapter so that requests are not protected via Apigee then execute then update `samples/apigee/grpc/rule.yaml` file with the following line.  This creates a rule to skip the adapater if the service name is `ratings-v6`.  
+2. To disable the Apigee Adapter so that requests are not protected via Apigee then execute then update `samples/apigee/rule.yaml` file with the following line.  This creates a rule to skip the adapater if the service name is `ratings-v6`.  
 
 **Note the samples folder is installed when you install the [Apigee Istio Adapter](https://github.com/apigee/istio-mixer-adapter/releases).**
 
@@ -138,7 +138,7 @@ match: context.reporter.kind == "inbound" && destination.namespace == "default" 
 
 Apply the change
 ```
-kubectl apply -f samples/apige/grpc/rule.yaml
+kubectl apply -f samples/apige/rule.yaml
 ```
 
 ### Demo Ratings-v6 - No backend database
