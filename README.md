@@ -226,6 +226,16 @@ apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [e
 
 
 ### Demo Ratings Firebase
+
+#### Prerequisite
+Enable the service mesh to allow communication with third-party services.
+
+```
+cd apigee-istio-k8s-demo
+kubectl apply -f kubernetes/service_entry/service-entry.yaml
+```
+
+#### Demo
 1. Setup terminal
 
 View the current `kubectl` config.
@@ -273,7 +283,7 @@ docker push gcr.io/$GOOGLE_CLOUD_PROJECT_NAME_GOES_HERE/ratings:v4
 
 Deploy Ratings V4 to K8S.
 ```
-cd kubernetes
+cd ../../kubernetes
 kubectl apply -f ratings-v4.yaml
 ```
 
