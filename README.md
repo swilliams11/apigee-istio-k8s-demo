@@ -228,7 +228,7 @@ apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [e
 ### Demo Ratings Firebase
 
 #### Prerequisite
-Enable the service mesh to allow communication with third-party services.
+Enable the service mesh to allow communication with third-party services.  Review the Istio documentation to [access an external HTTPS service.](https://istio.io/docs/tasks/traffic-management/egress/egress-control/#access-an-external-https-service)
 
 ```
 cd apigee-istio-k8s-demo
@@ -325,6 +325,40 @@ apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [e
   * [Istio Authentication Policy](https://istio.io/docs/tasks/security/authn-policy/#end-user-authentication)
 * Validate claims within JWT
 * Masking analytics data
+
+7. Send the following requests.
+Sending the ratings request without a `x-api-key` header will return and error.
+```
+curl http://${GATEWAY_URL}/ratings -i
+```
+
+Response is
+```
+HTTP/1.1 403 Forbidden
+content-length: 76
+content-type: text/plain
+date: Mon, 23 Sep 2019 20:24:10 GMT
+server: envoy
+x-envoy-upstream-service-time: 11
+
+PERMISSION_DENIED:apigee-handler.handler.istio-system:missing authentication
+```
+
+Send the request with the `x-api-key` header and you will receive a 200 OK response.
+```
+curl http://${GATEWAY_URL}/ratings -H "x-api-key: YOUR_APIKEY_HERE" -i
+```
+The response is:
+```
+HTTP/1.1 200 OK
+content-type: application/json
+date: Mon, 23 Sep 2019 20:19:31 GMT
+x-envoy-upstream-service-time: 1142
+server: envoy
+transfer-encoding: chunked
+
+{"entities":[{"rating":5,"reviewId":1},{"rating":4,"reviewId":2},{"rating":"5","reviewId":"3","productId":"1"},{"reviewId":"3","productId":"1","rating":"5"},{"productId":"1","rating":"5","reviewId":"3"},{"reviewId":"3","productId":"1","rating":"5"},{"productId":"2","rating":"5","reviewId":"3"},{"rating":"5","reviewId":"3","productId":"1"}]}
+```
 
 ## Firestore
 This rating app uses Firestore as the backend database.

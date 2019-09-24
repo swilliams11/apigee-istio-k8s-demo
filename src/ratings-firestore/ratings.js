@@ -151,7 +151,11 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
             res.writeHead(200, {'Content-type': 'application/json'});
             res.end(data);
           }
-        });
+        }).catch(err => {
+          console.log('Error in fetchRating()', err);
+          res.writeHead(500, {'Content-type': 'application/json'});
+          res.end(err);
+        });;
       }
     fetchRating();
 
@@ -224,6 +228,10 @@ async function fetchRatingWithQueryParam(docId, res) {
     res.writeHead(200, {'Content-type': 'application/json'});
     res.end(JSON.stringify(payload));
 
+  }).catch(err => {
+    console.log('Error getting documents by query param', err);
+    res.writeHead(500, {'Content-type': 'application/json'});
+    res.end(err);
   });
 }
 
