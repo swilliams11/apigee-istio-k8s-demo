@@ -25,13 +25,21 @@ spec:
   http:
   - match:
     - uri:
-        prefix: /ratings
-    - uri:
-        regex: '\/ratings.*'
-    - uri:
-        prefix: /health
+        prefix: /firestore-ratings
+    rewrite:
+      uri: /ratings
     route:
     - destination:
-        host: ratings-v4
+        host: ratings-firestore.default.svc.cluster.local
+        port:
+          number: 9080
+  - match:
+    - uri:
+        prefix: /nodb-ratings
+    rewrite:
+      uri: /ratings
+    route:
+    - destination:
+        host: ratings-nodb.default.svc.cluster.local
         port:
           number: 9080

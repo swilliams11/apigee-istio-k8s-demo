@@ -10,7 +10,7 @@ This documentation describes the Apigee Istio Adapter as of version 1.1.1.
 * [Book Info Application Notes](#book-info-application-notes)
 * [Demo Script](#demo-script)
   * [Prep steps](#prep-script)
-  * [Ratings - No backend database - v6](#demo-ratings-v6---no-backend-database)
+  * [Ratings - No backend database - v6](#demo-ratings-nodb---no-backend-database)
   * [Ratings - Firebase backend - v4](#demo-ratings-firebase)
 * [Firestore](#firestore)
 * [Ratings API](#ratings-api)
@@ -128,12 +128,12 @@ Execute these steps if you have already gone through the demo.
 kubectl delete policy auth-spec
 ```
 
-2. To disable the Apigee Adapter so that requests are not protected via Apigee then execute then update `samples/apigee/rule.yaml` file with the following line.  This creates a rule to skip the adapater if the service name is `ratings-v6`.  
+2. To disable the Apigee Adapter so that requests are not protected via Apigee, then execute then update `samples/apigee/rule.yaml` file with the following line.  This creates a rule to skip the adapter if the service name is `ratings-nodb`.  
 
 **Note the samples folder is installed when you install the [Apigee Istio Adapter](https://github.com/apigee/istio-mixer-adapter/releases).**
 
 ```
-match: context.reporter.kind == "inbound" && destination.namespace == "default" && destination.service.name != "ratings-v6"
+match: context.reporter.kind == "inbound" && destination.namespace == "default" && destination.service.name != "ratings-nodb"
 ```
 
 Apply the change
@@ -141,7 +141,7 @@ Apply the change
 kubectl apply -f samples/apigee/rule.yaml
 ```
 
-### Demo Ratings-v6 - No backend database
+### Demo Setup
 1. Setup terminal
 
 View the current `kubectl` config.
@@ -160,28 +160,42 @@ Set the credentials for your K8S cluster.
 gcloud container clusters get-credentials [CLUSTER_NAME]
 ```
 
-2. Push the container to your Google Cloud Container Registry.
+Export your Google Cloud project ID to an environment variable.
 ```
-cd apigee-istio-k8s-demo/src/ratings-v6
-docker build . --tag ratings:v6 --build-arg service_version=6
-docker tag ratings:v4 gcr.io/$GOOGLE_CLOUD_PROJECT/ratings:v6
+export GCP_PROJECT=`gcloud config list --format 'value(core.project)' 2>/dev/null
+```
+
+2. Deploy the ratings-ingress gateway.
+```
+kubectl apply -f kubernetes/ratings-ingress.yaml
+```
+
+### Demo ratings-nodb - No backend database
+This demo uses the ratings app that does not use a backend database, so all ratings are stored within the local containers memory.
+All commands should be executed from the following directory.
+```
+cd apigee-istio-k8s-demo
+```
+
+1. Push the container to your Google Cloud Container Registry.
+* Push if Docker is installed.
+```
+docker build src/ratings-nodb --tag ratings-nodb:v6 --build-arg service_version=6
+docker tag ratings-nodb:v6 gcr.io/$GCP_PROJECT/ratings-nodb:v6
 ```
 
 Push the local docker image to [GCR](https://cloud.google.com/container-registry/docs/pushing-and-pulling).
 ```
-docker push gcr.io/$GOOGLE_CLOUD_PROJECT/ratings:v6
+docker push gcr.io/$GCP_PROJECT/ratings-nodb:v6
+```
+* Push if Docker is not installed. Use GCloud instead.  
+```
+gcloud builds submit --tag gcr.io/$GCP_PROJECT/ratings-nodb:v6 src/ratings-nodb
 ```
 
-3. Deploy ratings-v6 API to Kubernetes so that it is publicly accessible.
-
-**Note: make sure to update the ratings-v6.yaml file so that it points to your GCP project.**
+2. Deploy ratings-nodb API to Kubernetes so that it is publicly accessible.
 ```
-  image: gcr.io/YOUR_GCP_PROJECT_NAME_GOES_HERE/ratings:v6
-```
-
-```
-cd apigee-istio-k8s-demo/kubernetes
-kubectl apply -f ratings-v6.yaml
+cat kubernetes/ratings-nodb.yaml | sed "s/{{GCP_PROJECT}}/$GCP_PROJECT/g" | kubectl apply -f -
 ```
 
 ```
@@ -203,7 +217,7 @@ kubectl get pods
 ```
 
 
-4. Istio is already installed and the Apigee Adapter is already installed/enabled in my environment. Create the Apigee product, app and developer and obtain the API Key.
+3. Istio is already installed and the Apigee Adapter is already installed/enabled in my environment. Create the Apigee product, app and developer and obtain the API Key.
 
 [Configure the Apigee adapter](https://docs.apigee.com/api-platform/istio-adapter/install-istio_1_1#configure_the_apigee_adapter)
 [Create the developer, product and app](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
@@ -215,121 +229,19 @@ apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [e
 ```
 
 * Add a path to the `istio-ratings` product to show how you can control the product paths via the Apigee product.
-  * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error.
+  * add `/` to the product path.
 
-5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
-
-* Access Token Validation (JWTs)
-  * [Istio Authentication Policy](https://istio.io/docs/tasks/security/authn-policy/#end-user-authentication)
-* Validate claims within JWT
-* Masking analytics data
-
-
-### Demo Ratings Firebase
-
-#### Prerequisite
-Enable the service mesh to allow communication with third-party services.  Review the Istio documentation to [access an external HTTPS service.](https://istio.io/docs/tasks/traffic-management/egress/egress-control/#access-an-external-https-service)
-
-```
-cd apigee-istio-k8s-demo
-kubectl apply -f kubernetes/service_entry/service-entry.yaml
-```
-
-#### Demo
-1. Setup terminal
-
-View the current `kubectl` config.
-```
-kubectl config current-context
-```
-
-Set your GCP project and zone.
-```
-gcloud config set project [PROJECT_ID]
-gcloud config set compute/zone us-central1-a
-```
-
-Set the credentials for your K8S cluster.
-```
-gcloud container clusters get-credentials [CLUSTER_NAME]
-```
-
-2. Create the secret in Kubernetes for the Google Firebase JSON file. The secret is named `firebase` and the key is `firebase.json`.
-```
-cd apigee-istio-k8s-demo
-kubectl create secret generic firebase --from-file=keys/firebase.json
-```
-
-Confirm that the secret was created.
-```
-kubectl get secrets
-kubectl describe secrets/firebase
-kubectl get secret firebase -o yaml
-```
-
-3. Push the container to your Google Cloud Container Registry.
-```
-cd apigee-istio-k8s-demo/src/ratings
-docker build . --tag ratings:v4 --build-arg service_version=4
-docker tag ratings:v4 gcr.io/$GOOGLE_CLOUD_PROJECT/ratings:v4
-```
-
-Push the local docker image to [GCR](https://cloud.google.com/container-registry/docs/pushing-and-pulling).
-```
-docker push gcr.io/$GOOGLE_CLOUD_PROJECT_NAME_GOES_HERE/ratings:v4
-```
-
-4. Deploy ratings API to Kubernetes so that it is publicly accessible.
-
-Deploy Ratings V4 to K8S.
-```
-cd ../../kubernetes
-kubectl apply -f ratings-v4.yaml
-```
-
-```
-kubectl get services
-```
-
-You should see the ratings service listed.
-
-```
-NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-edge-microgateway   NodePort                    <none>        8000:31197/TCP   113d
-helloworld          NodePort    10              <none>        8081:31402/TCP   113d
-kubernetes          ClusterIP   10              <none>        443/TCP          115d
-ratings             ClusterIP   10              <none>        9080/TCP         1m
-```
-
-```
-kubectl get pods
-```
-
-5. Istio is already installed and the Apigee Adapter is already installed/enabled in my environment. Create the Apigee product, app and developer and obtain the API Key.
-
-[Configure the Apigee adapter](https://docs.apigee.com/api-platform/istio-adapter/install-istio_1_1#configure_the_apigee_adapter)
-[Create the developer, product and app](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
-
-
-You can also bind the service to the product with the following [bind command](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
-```
-apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [environment] -u [username] -p [password]
-```
-
-* Add a path to the `istio-ratings` product to show how you can control the product paths via the Apigee product.
-  * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error.
-
-6. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
+4. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
 
 * Access Token Validation (JWTs)
   * [Istio Authentication Policy](https://istio.io/docs/tasks/security/authn-policy/#end-user-authentication)
 * Validate claims within JWT
 * Masking analytics data
 
-7. Send the following requests.
+6. Send the following requests.
 Sending the ratings request without a `x-api-key` header will return and error.
 ```
-curl http://${GATEWAY_URL}/ratings -i
+curl http://${GATEWAY_URL}/nodb-ratings/1 -i
 ```
 
 Response is
@@ -346,7 +258,147 @@ PERMISSION_DENIED:apigee-handler.handler.istio-system:missing authentication
 
 Send the request with the `x-api-key` header and you will receive a 200 OK response.
 ```
-curl http://${GATEWAY_URL}/ratings -H "x-api-key: YOUR_APIKEY_HERE" -i
+curl http://${GATEWAY_URL}/nodb-ratings/1 -H "x-api-key: YOUR_APIKEY_HERE" -i
+```
+The response is:
+```
+HTTP/1.1 200 OK
+content-type: application/json
+date: Mon, 23 Sep 2019 20:19:31 GMT
+x-envoy-upstream-service-time: 1142
+server: envoy
+transfer-encoding: chunked
+
+{"rating":5,"reviewId":1}
+```
+
+
+#### Additional requests
+Fetch specific rating.
+```
+curl http://${GATEWAY_URL}/nodb-ratings/2 -H "x-api-key: YOUR_APIKEY_HERE" -i
+curl http://${GATEWAY_URL}/nodb-ratings?docId=2 -H "x-api-key: YOUR_APIKEY_HERE" -i
+```
+
+Post a new rating.  
+```
+curl -X POST http://${GATEWAY_URL}/v6/ratings -H "x-api-key: YOUR_APIKEY_HERE" -d '{ "reviewId": 3, "rating": 5, "productId": 1 }' -i
+```
+
+Health check.
+```
+curl http://${GATEWAY_URL}/nodb-ratings/health -H "x-api-key: YOUR_APIKEY_HERE"
+```
+
+### Demo Ratings Firestore
+In this demo we use the Istio VirtualService gateway to rewrite expose a different base path (`/firestore-ratings`) and rewrite that base path to `/ratings`.  We still need to include the actual path that is used in the Apigee product (`/`) to expose the service to developers.    
+
+#### Prerequisites
+Enable the service mesh to allow communication with third-party services.  Review the Istio documentation to [access an external HTTPS service.](https://istio.io/docs/tasks/traffic-management/egress/egress-control/#access-an-external-https-service)
+
+```
+cd apigee-istio-k8s-demo
+kubectl apply -f kubernetes/service_entry/firestore-egress.yaml
+```
+
+#### Demo
+1. Create the secret in Kubernetes for the Google Firestore JSON file. The secret is named `firestore` and the key is `firestore.json`.
+```
+cd apigee-istio-k8s-demo
+kubectl create secret generic firestore --from-file=keys/firestore.json
+```
+
+Confirm that the secret was created.
+```
+kubectl get secrets
+kubectl describe secrets/firebase
+kubectl get secret firebase -o yaml
+```
+
+2. Push the container to your Google Cloud Container Registry.
+* Use the following commands if Docker is installed.
+```
+docker build src/ratings-firestore --tag ratings-firestore:v5 --build-arg service_version=5
+docker tag ratings-firestore:v5 gcr.io/$GCP_PROJECT/ratings-firestore:v5
+```
+
+Push the local docker image to [GCR](https://cloud.google.com/container-registry/docs/pushing-and-pulling).
+```
+docker push gcr.io/$GCP_PROJECT/ratings-firestore:v5
+```
+
+* Use the following commands if Docker **is not** installed.
+```
+gcloud builds submit --tag gcr.io/$GCP_PROJECT/ratings-firestore:v5 src/ratings-firestore
+```
+
+3. Deploy ratings API to Kubernetes so that it is publicly accessible.
+
+Deploy ratings-firestore V5 to K8S.
+```
+cat kubernetes/ratings-firestore.yaml | sed "s/{{GCP_PROJECT}}/$GCP_PROJECT/g" | kubectl apply -f -
+```
+
+```
+kubectl get services
+```
+
+You should see the ratings service listed.
+
+```
+NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+edge-microgateway   NodePort                    <none>        8000:31197/TCP   113d
+helloworld          NodePort    10              <none>        8081:31402/TCP   113d
+kubernetes          ClusterIP   10              <none>        443/TCP          115d
+ratings-firestore   ClusterIP   10              <none>        9080/TCP         1m
+```
+
+```
+kubectl get pods
+```
+
+4. Istio is already installed and the Apigee Adapter is already installed/enabled in my environment. Create the Apigee product, app and developer and obtain the API Key.
+
+[Configure the Apigee adapter](https://docs.apigee.com/api-platform/istio-adapter/install-istio_1_1#configure_the_apigee_adapter)
+[Create the developer, product and app](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
+
+
+You can also bind the service to the product with the following [bind command](https://docs.apigee.com/api-platform/istio-adapter/reference#binding_commands).
+```
+apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [environment] -u [username] -p [password]
+```
+
+* Add a path to the `istio-ratings-firestore` product to show how you can control the product paths via the Apigee product.
+  * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error.
+
+5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
+
+* Access Token Validation (JWTs)
+  * [Istio Authentication Policy](https://istio.io/docs/tasks/security/authn-policy/#end-user-authentication)
+* Validate claims within JWT
+* Masking analytics data
+
+6. Send the following requests.
+Sending the ratings request without a `x-api-key` header will return and error.
+```
+curl http://${GATEWAY_URL}/firestore-ratings -i
+```
+
+Response is
+```
+HTTP/1.1 403 Forbidden
+content-length: 76
+content-type: text/plain
+date: Mon, 23 Sep 2019 20:24:10 GMT
+server: envoy
+x-envoy-upstream-service-time: 11
+
+PERMISSION_DENIED:apigee-handler.handler.istio-system:missing authentication
+```
+
+Send the request with the `x-api-key` header and you will receive a 200 OK response.
+```
+curl http://${GATEWAY_URL}/firestore-ratings -H "x-api-key: YOUR_APIKEY_HERE" -i
 ```
 The response is:
 ```
@@ -360,6 +412,19 @@ transfer-encoding: chunked
 {"entities":[{"rating":5,"reviewId":1},{"rating":4,"reviewId":2},{"rating":"5","reviewId":"3","productId":"1"},{"reviewId":"3","productId":"1","rating":"5"},{"productId":"1","rating":"5","reviewId":"3"},{"reviewId":"3","productId":"1","rating":"5"},{"productId":"2","rating":"5","reviewId":"3"},{"rating":"5","reviewId":"3","productId":"1"}]}
 ```
 
+
+##### Additional requests
+Fetch specific rating.
+```
+curl http://${GATEWAY_URL}/firestore-ratings/1 -H "x-api-key: YOUR_APIKEY_HERE" -i
+curl http://${GATEWAY_URL}/firestore-ratings?docId=2 -H "x-api-key: YOUR_APIKEY_HERE" -i
+```
+
+Post a new rating.  
+```
+curl -X POST http://${GATEWAY_URL}/firestore-ratings -H "x-api-key: YOUR_APIKEY_HERE" -d '{ "reviewId": 3, "rating": 5, "productId": 1 }' -i
+```
+
 ## Firestore
 This rating app uses Firestore as the backend database.
 
@@ -368,18 +433,16 @@ https://cloud.google.com/docs/authentication/getting-started#auth-cloud-implicit
 
 
 ## Ratings API
-**Note that originally this app was supposed to be backed by the Firestore DB, but there is an error on start-up, therefore use version 6, which does not have a database associated to it.**
-
-### Start Ratings Node.js app locally
+### Start ratings-firestore Node.js app locally
 
 To start
 ```
-export export GOOGLE_APPLICATION_CREDENTIALS="[PATH_TO_YOUR_FIREBASE_JSON_CREDENDTIAL]"
-cd ~/Github/apigee-istio-k8s-demo/src/ratings
+export GOOGLE_APPLICATION_CREDENTIALS="[PATH_TO_YOUR_FIREBASE_JSON_CREDENDTIAL]"
+cd ~/Github/apigee-istio-k8s-demo/src/ratings-firestore
 node ratings.js 9000
 ```
 
-### Get all ratings
+#### Get all ratings
 ```
 curl http://localhost:9000/ratings
 ```
@@ -388,12 +451,12 @@ Response
 ```
 {"entities":[{"reviewId":1,"rating":5},{"rating":4,"reviewId":2},{"reviewId":"3","productId":"1","rating":"5"},{"reviewId":"3","productId":"1","rating":"5"},{"productId":"1","rating":"5","reviewId":"3"},{"productId":"1","rating":"5","reviewId":"3"},{"reviewId":"3","productId":"2","rating":"5"},{"reviewId":"3","productId":"1","rating":"5"}]}
 ```
-### Get a rating
+#### Get a rating
 
 ```
 curl http://localhost:9000/ratings/1
 ```
-### Query ratings based on a product ID
+#### Query ratings based on a product ID
 ```
 curl http://localhost:9000/ratings?docId=2
 ```
@@ -403,12 +466,52 @@ Response
 {"entities":[{"reviewId":"3","productId":"2","rating":"5"}]}
 ```
 
-### Post a rating
+#### Post a rating
+
+```
+curl -X POST http://localhost:9000/ratings -d '{ "reviewId": 3, "rating": 5, "productId": 1 }' -v
+```
+#### Health check
+```
+curl -X POST http://localhost:9000/ratings/v6/health -i
+```
+
+### Start ratings-nodb Node.js app locally
+
+To start
+```
+export GOOGLE_APPLICATION_CREDENTIALS="[PATH_TO_YOUR_FIREBASE_JSON_CREDENDTIAL]"
+cd ~/Github/apigee-istio-k8s-demo/src/ratings-nodb
+node ratings.js 9000
+```
+
+#### Get a rating
+
+```
+curl http://localhost:9000/ratings/
+```
+#### Query ratings based on a product ID
+```
+curl http://localhost:9000/ratings?docId=2
+```
+
+Response
+```
+{"entities":[{"reviewId":"3","productId":"2","rating":"5"}]}
+```
+
+#### Post a rating
 
 ```
 curl -X POST http://localhost:9000/ratings -d '{ "reviewId": 3, "rating": 5, "productId": 1 }' -v
 ```
 
+#### Health check
+```
+curl -X POST http://localhost:9000/ratings/health -i
+```
+
+## Misc
 ### Build Docker image and push to Google Container Registry
 1. [Build a docker file](https://docs.docker.com/engine/reference/commandline/build/).
 
@@ -454,7 +557,7 @@ instead of the following which is the name of my [Service](https://kubernetes.io
 ```
 spec:
   targets:
-  - name: ratings-v6
+  - name: ratings-nodb
 ```
 
 

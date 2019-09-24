@@ -38,8 +38,16 @@ async function initializeFirestoreWithData() {
     rating: 4,
   });
 }
-initializeFirestoreWithData();
+//initializeFirestoreWithData();
 
+
+/*
+health check
+*/
+dispatcher.onGet('/ratings/health', function (req, res) {
+  res.writeHead(200, {'Content-type': 'application/json'})
+  res.end(JSON.stringify({status: 'Ratings is healthy'}))
+});
 
 /*
 Creates a new rating in the Ratings collection without a provided id.
@@ -234,15 +242,6 @@ async function fetchRatingWithQueryParam(docId, res) {
     res.end(err);
   });
 }
-
-
-/*
-health check
-*/
-dispatcher.onGet('/health', function (req, res) {
-  res.writeHead(200, {'Content-type': 'application/json'})
-  res.end(JSON.stringify({status: 'Ratings is healthy'}))
-});
 
 function handleRequest (request, response) {
   try {

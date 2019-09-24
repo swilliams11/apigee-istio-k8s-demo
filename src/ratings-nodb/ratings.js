@@ -19,6 +19,11 @@ var port = parseInt(process.argv[2])
 
 var userAddedRatings = [] // used to demonstrate POST functionality
 
+dispatcher.onGet('/ratings/health', function (req, res) {
+  res.writeHead(200, {'Content-type': 'application/json'})
+  res.end(JSON.stringify({status: 'Ratings is healthy'}))
+})
+
 dispatcher.onPost(/^\/ratings\/[0-9]*/, function (req, res) {
   var productIdStr = req.url.split('/').pop()
   var productId = parseInt(productIdStr)
@@ -56,10 +61,6 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
   }
 })
 
-dispatcher.onGet('/health', function (req, res) {
-  res.writeHead(200, {'Content-type': 'application/json'})
-  res.end(JSON.stringify({status: 'Ratings is healthy'}))
-})
 
 function putLocalReviews (productId, ratings) {
   userAddedRatings[productId] = {
