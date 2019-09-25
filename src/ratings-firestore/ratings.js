@@ -150,6 +150,7 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
       async function fetchRating() {
         const documentRef = firestore.doc('ratings/' + ratingIdStr);
         console.log('fetching document');
+        //console.log(documentRef);
         var data;
         // Read the document.
         await documentRef.get().then((documentSnapshot) => {
@@ -158,6 +159,10 @@ dispatcher.onGet(/^\/ratings\/[0-9]*/, function (req, res) {
             console.log('Data: ' + data);
             res.writeHead(200, {'Content-type': 'application/json'});
             res.end(data);
+          } else {
+            console.log('Document snapshot does not exist');
+            res.writeHead(400, {'Content-type': 'application/json'});
+            res.end(JSON.stringify({'message': 'That rating ID does not exist.'}));
           }
         }).catch(err => {
           console.log('Error in fetchRating()', err);
