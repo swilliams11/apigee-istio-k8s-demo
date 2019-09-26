@@ -318,18 +318,18 @@ kubectl get secret firebase -o yaml
 2. Push the container to your Google Cloud Container Registry.
 * Use the following commands if Docker is installed.
 ```
-docker build src/ratings-firestore --tag ratings-firestore:v5 --build-arg service_version=5
-docker tag ratings-firestore:v5 gcr.io/$GCP_PROJECT/ratings-firestore:v5
+docker build src/ratings-firestore --tag ratings-firestore:v5.1 --build-arg service_version=5.1
+docker tag ratings-firestore:v5 gcr.io/$GCP_PROJECT/ratings-firestore:v5.1
 ```
 
 Push the local docker image to [GCR](https://cloud.google.com/container-registry/docs/pushing-and-pulling).
 ```
-docker push gcr.io/$GCP_PROJECT/ratings-firestore:v5
+docker push gcr.io/$GCP_PROJECT/ratings-firestore:v5.1
 ```
 
 * Use the following commands if Docker **is not** installed.
 ```
-gcloud builds submit --tag gcr.io/$GCP_PROJECT/ratings-firestore:v5 src/ratings-firestore
+gcloud builds submit --tag gcr.io/$GCP_PROJECT/ratings-firestore:v5.1 src/ratings-firestore
 ```
 
 3. Deploy ratings API to Kubernetes so that it is publicly accessible.
@@ -370,6 +370,7 @@ apigee-istio bindings add [service_name] [product_name]  -o [organization] -e [e
 
 * Add a path to the `istio-ratings-firestore` product to show how you can control the product paths via the Apigee product.
   * add `/ratings/*` to the product paths and then send requests for `/health` and `/ratings` and you should receive an authorization error.
+  * **Note**: The `firestore-ingress.yaml` rewrites the uri path from `/firestore-ratings` to `/ratings`; therefore, you need to configure the Apigee product paths as `/ratings` and `/ratings/*`.
 
 5. See the [operations guide](https://docs.apigee.com/api-platform/istio-adapter/operation) for additional tasks that can be performed.
 
@@ -383,6 +384,7 @@ Sending the ratings request without a `x-api-key` header will return and error.
 ```
 curl http://${GATEWAY_URL}/firestore-ratings -i
 ```
+**Note**: The `firestore-ingress.yaml` rewrites the uri path from `/firestore-ratings` to `/ratings`.
 
 Response is
 ```

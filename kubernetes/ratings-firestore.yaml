@@ -20,14 +20,14 @@ metadata:
   name: ratings-firestore
   labels:
     app: ratings-firestore
-    version: v5
+    version: v5.1
 spec:
   ports:
   - port: 9080
     name: http
   selector:
     app: ratings
-    version: v5
+    version: v5.1
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -39,11 +39,11 @@ spec:
     metadata:
       labels:
         app: ratings
-        version: v5
+        version: v5.1
     spec:
       containers:
       - name: ratings
-        image: gcr.io/{{GCP_PROJECT}}/ratings-firestore:v5
+        image: gcr.io/{{GCP_PROJECT}}/ratings-firestore:v5.1
         volumeMounts:
         - name: firebase-vol
           mountPath: "/tmp"
